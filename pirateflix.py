@@ -20,7 +20,7 @@ except ImportError:
         def unescape(string):
             return HTMLParser.HTMLParser().unescape(string)
 
-url_base = "http://thepiratebay.gd/search/"
+url_base = "http://thepiratebay.se/search/"
 if "-t" in sys.argv[1]:
     test = True
     query = sys.argv[2:]
