@@ -61,17 +61,24 @@ choice = ""
 error = True
 while(error):
     try:
-        choice = raw_input("Which torrent to play(q to quit)?\n:")
-        if not choice == "q" :
+        choice = raw_input("Which torrent to play(q to quit, m INDEX to show magnet link)?\n:")
+        if re.match("^[0-9]+",choice):
             choice = int(choice)
-        error = False
-    except:
+            error = False
+            
+        elif choice == "q" :
+            sys.exit(0)
+        elif re.match("[m]+ [0-9]*",choice):
+            g = re.findall("[m]+ [0-9]*",choice)
+            choice = int(g[0].split()[1])
+            print ("%s:\n%s"%(results[choice]["name"],results[choice]["magnet"]))
+            sys.exit(0)
+            error = False
+    except Exception,e:
+        print(e)
         print("Invalid number. Try again")
 
-    if "q" == choice:
-        sys.exit(0)
-
-print ("opening peerflix using %s" % (results[choice]["name"]))
+print ("opening peerflix using %s" % (results[int(choice)]["name"]))
 
 import subprocess
 
