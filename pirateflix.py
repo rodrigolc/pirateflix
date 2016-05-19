@@ -64,7 +64,7 @@ except ImportError:
         def unescape(string):
             return HTMLParser.HTMLParser().unescape(string)
 
-url_base = "http://thepiratebay.se/search/"
+url_base = "http://thepiratebay.org/search/"
 if "-t" in sys.argv[1]:
     test = True
     query = sys.argv[2:]
@@ -97,22 +97,28 @@ for r in result_list[1:]: #first is header
     m = m.groups()
     result = {"name": m[0], "magnet":m[1],"description":unescape(m[3]+m[4]),"VIP": True if 'alt="VIP"' in m[2] or 'alt="Trusted"' in m[2] else False}
     results.append(result)
-    print (colors.fg.green if result["VIP"] else "") + result["description"]
-    print "[%s]>>>" % (i), result["name"],colors.reset
+    print (colors.fg.green if result["VIP"] else "") + "[%s]>>>" % (i), result["name"]
+    print result["description"],colors.reset
 
     i+=1
 
 choice = ""
 error = True
+index = False
 while(error):
     try:
-        choice = raw_input("Which torrent to play(q to quit, m INDEX to show magnet link)?\n:")
+        choice = raw_input("Which torrent to play(q to quit, m INDEX to show magnet link, l INDEX to list available files in torrent)?\n:")
         if re.match("^[0-9]+",choice):
             choice = int(choice)
             error = False
 
         elif choice == "q" :
             sys.exit(0)
+        elif re.match("[l]+ [0-9]*",choice):
+            g = re.findall("[l]+ [0-9]*",choice)
+            choice = int(g[0].split()[1])
+            index = True
+            error = False
         elif re.match("[m]+ [0-9]*",choice):
             g = re.findall("[m]+ [0-9]*",choice)
             choice = int(g[0].split()[1])
@@ -126,5 +132,7 @@ while(error):
 print ("opening peerflix using %s" % (results[int(choice)]["name"]))
 
 import subprocess
-
-ret = subprocess.call(["peerflix","-v", results[choice]["magnet"]],stdout=1)
+if index:
+    ret = subprocess.call(["peerflix","-v","-l", results[choice]["magnet"]],stdout=1)
+else:
+    ret = subprocess.call(["peerflix","-v", results[choice]["magnet"]],stdout=1)
