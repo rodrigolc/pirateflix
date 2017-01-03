@@ -63,6 +63,7 @@ for r in result_list[1:]: #first is header
 choice = ""
 error = True
 index = False
+vlc = True
 while(error):
     try:
         choice = raw_input("Which torrent to play(q to quit, m INDEX to show magnet link, l INDEX to list available files in torrent)?\n:")
@@ -83,6 +84,11 @@ while(error):
             print ("%s:\n%s"%(results[choice]["name"],results[choice]["magnet"]))
             sys.exit(0)
             error = False
+        elif re.match("[d]+ [0-9]*",choice):
+            g = re.findall("[d]+ [0-9]*",choice)
+            choice = int(g[0].split()[1])
+            error = False
+            vlc = False
     except Exception,e:
         print(e)
         print("Invalid number. Try again")
@@ -90,7 +96,10 @@ while(error):
 print ("opening peerflix using %s" % (results[int(choice)]["name"]))
 
 import subprocess
+peerflix_options = []
+if vlc:
+    peerflix_options.append("-v")
 if index:
-    ret = subprocess.call(["peerflix","-v","-l", results[choice]["magnet"]],stdout=1)
-else:
-    ret = subprocess.call(["peerflix","-v", results[choice]["magnet"]],stdout=1)
+    peerflix_options.append("-l")
+
+ret = subprocess.call(["peerflix"] + peerflix_options +[results[choice]["magnet"]],stdout=1)
