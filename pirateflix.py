@@ -96,7 +96,7 @@ while(error):
 print ("opening peerflix using %s" % (results[int(choice)]["name"]))
 
 import subprocess
-peerflix_options = []
+peerflix_options = ["-d"]
 if vlc:
     peerflix_options.append("-v")
 if index:
