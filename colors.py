@@ -10,7 +10,7 @@ class colors:
     two subclasses fg for foreground and bg for background.
     use as colors.subclass.colorname.
     i.e. colors.fg.red or colors.bg.green
-    also, the generic bold, disable, underline, reverse, strikethrough,
+    also, the generic bold, disable, underline, reverse, strikethrough, 
     and invisible work with the main class
     i.e. colors.bold
     '''

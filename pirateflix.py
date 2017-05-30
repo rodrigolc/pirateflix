@@ -11,7 +11,7 @@ import re
 import subprocess
 import sys
 
-import colors
+from colors import colors
 
 try:
     from http import unescape
