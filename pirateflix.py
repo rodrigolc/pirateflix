@@ -9,7 +9,6 @@ except ImportError:
     from urllib2 import Request
 import re
 import subprocess
-import sys
 
 from colors import colors
 
@@ -27,60 +26,80 @@ except ImportError:
         def unescape(string):
             return HTMLParser.HTMLParser().unescape(string)
 
-url_base = "http://thepiratebay.org/search/"
-if "-t" in sys.argv[1]:
-    test = True
-    query = sys.argv[2:]
-else:
-    query = sys.argv[1:]
-    test = False
-args = " ".join(query)  # will the " " break this?
-url = url_base + args
-if not test:
+
+def search(args):
+
+    url_base = "http://thepiratebay.org/search/"
+
+    args = " ".join(args)  # will the " " break this?
+    url = url_base + args
+
     print("searching for torrents on piratebay using \"%s\" as search terms" %
           (args))
-headers = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) " +
-    "AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A"}
-request = Request(url, headers=headers)
-page = urlopen(request).read()
 
-result_table = re.findall(
-    "<table id=\"searchResult\">(.*)</table>", page, re.M + re.S)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) " +
+        "AppleWebKit/537.75.14 (KHTML, like Gecko) " +
+        "Version/7.0.3 Safari/7046A194A"
+        }
+    request = Request(url, headers=headers)
+    page = urlopen(request).read()
 
-if test:
-    sys.exit(0 if len(result_table) > 0 else 1)
+    result_table = re.findall(
+        "<table id=\"searchResult\">(.*)</table>", page, re.M + re.S)
 
-if len(result_table) < 1:
-    print "No Results"
-    sys.exit(1)
+    result_table = result_table[0]
 
-result_table = result_table[0]
-result_list = re.findall("<tr[^>]*>(.*?)</tr>", result_table, re.M + re.S)
-results = []
-i = 0
-for r in result_list[1:]:  # first is header
-    m = re.search(
-        'detName">.*?>(.*?)</a>.*?' +
-        '<a href="(.*?)"(.*)"detDesc">(.*?)<.*?>(.*?)<',
-        r, re.M + re.S)
-    m = m.groups()
-    result = {"name": m[0], "magnet": m[1], "description": unescape(
-        m[3] + m[4]), "VIP": True if 'alt="VIP"' in m[2] or
-                                     'alt="Trusted"' in m[2]
-                                     else False}
-    results.append(result)
-    print (colors.fg.green if result["VIP"]
-           else "") + "[%s]>>>" % (i), result["name"]
-    print result["description"], colors.reset
+    result_list = re.findall("<tr[^>]*>(.*?)</tr>", result_table, re.M + re.S)
+    results = []
 
-    i += 1
+    for r in result_list[1:]:  # first is header
+        m = re.search(
+            'detName">.*?>(.*?)</a>.*?' +
+            '<a href="(.*?)"(.*)"detDesc">(.*?)<.*?>(.*?)<',
+            r, re.M + re.S)
+        m = m.groups()
+        result = {"name": m[0], "magnet": m[1], "description": unescape(
+            m[3] + m[4]), "VIP": True if 'alt="VIP"' in m[2] or
+                                        'alt="Trusted"' in m[2]
+                                        else False}
+        results.append(result)
 
-choice = ""
-error = True
-index = False
-vlc = True
-while(error):
+    return results
+
+
+def print_results(results):
+    if len(results) <= 0:
+        print ("No Results")
+    i = 0
+    for r in results:
+        print (colors.fg.green if r["VIP"]
+               else "") + "[%s]>>>" % (i), r["name"]
+        print r["description"], colors.reset
+
+        i += 1
+
+
+def start_peerflix(magnet, index=False, vlc=True):
+    
+    peerflix_options = ["-d"]
+    if vlc:
+        peerflix_options.append("-v")
+    if index:
+        peerflix_options.append("-l")
+
+    ret = subprocess.call(["peerflix"] + peerflix_options +
+                          [magnet], stdout=1)
+
+    return ret
+
+
+query = raw_input("Search:")
+search_results = search(query.split(' '))
+print_results(search_results)
+
+in_menu = True
+while(in_menu):
     try:
         choice = raw_input(
             "Which torrent to play?\n" +
@@ -90,42 +109,35 @@ while(error):
             " l INDEX      - list available files in torrent\n" +
             " s NEW_SEARCH - search again(NOT IMPLEMENTED)\n" +
             ":")
-        if re.match("^[0-9]+", choice):
+        if re.match("[0-9]+", choice):
             choice = int(choice)
-            error = False
+            start_peerflix(search_results[choice]['magnet'])
         elif choice == "q":
-            sys.exit(0)
+            in_menu = False
         elif re.match("[s]+ .*", choice):
-            print("NOT IMPLEMENTED")
-            error = True
+            print choice
+            g = re.findall('[s]+ (.*)', choice)
+            search_results = search(g[0].split())
+            print_results(search_results)
         elif re.match("[l]+ [0-9]*", choice):
-            g = re.findall("[l]+ [0-9]*", choice)
-            choice = int(g[0].split()[1])
-            index = True
-            error = False
+            g = re.findall("[l]+ ([0-9]*)", choice)
+            choice = int(g[0])
+            start_peerflix(search_results[choice]['magnet'], index=True)
         elif re.match("[m]+ [0-9]*", choice):
-            g = re.findall("[m]+ [0-9]*", choice)
-            choice = int(g[0].split()[1])
-            print ("%s:\n%s" %
-                   (results[choice]["name"], results[choice]["magnet"]))
-            sys.exit(0)
-            error = False
-        elif re.match("[d]+ [0-9]*", choice):
-            g = re.findall("[d]+ [0-9]*", choice)
-            choice = int(g[0].split()[1])
-            error = False
-            vlc = False
+            g = re.findall("[m]+ ([0-9]*)", choice)
+            choice = int(g[0])
+            print(
+              "%s:\n%s" %
+              (search_results[choice]["name"],
+               search_results[choice]["magnet"])
+            )
+            in_menu = False
+        elif re.match("[d]+ [0-9]*$", choice):
+            g = re.findall('^[d]+ ([0-9]*)$', choice)
+            choice = int(g[0])
+            start_peerflix(search_results[choice]['magnet'], index=False,
+                           vlc=False)
     except Exception, e:
         print(e)
-        print("Invalid number. Try again")
+        print("Invalid command. Try again")
 
-print ("opening peerflix using %s" % (results[int(choice)]["name"]))
-
-peerflix_options = ["-d"]
-if vlc:
-    peerflix_options.append("-v")
-if index:
-    peerflix_options.append("-l")
-
-ret = subprocess.call(["peerflix"] + peerflix_options +
-                      [results[choice]["magnet"]], stdout=1)
