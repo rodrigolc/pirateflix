@@ -83,14 +83,21 @@ vlc = True
 while(error):
     try:
         choice = raw_input(
-            "Which torrent to play('q' to quit, 'm INDEX' to show magnet" +
-            " link 'l INDEX' to list available files in torrent)?\n:")
+            "Which torrent to play?\n" +
+            " INDEX        - play video on vlc\n" +
+            " q            - quit\n" +
+            " m INDEX      - show magnet link\n" +
+            " l INDEX      - list available files in torrent\n" +
+            " s NEW_SEARCH - search again(NOT IMPLEMENTED)\n" +
+            ":")
         if re.match("^[0-9]+", choice):
             choice = int(choice)
             error = False
-
         elif choice == "q":
             sys.exit(0)
+        elif re.match("[s]+ .*", choice):
+            print("NOT IMPLEMENTED")
+            error = True
         elif re.match("[l]+ [0-9]*", choice):
             g = re.findall("[l]+ [0-9]*", choice)
             choice = int(g[0].split()[1])
