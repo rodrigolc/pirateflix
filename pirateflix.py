@@ -107,7 +107,8 @@ while(in_menu):
             " q            - quit\n" +
             " m INDEX      - show magnet link\n" +
             " l INDEX      - list available files in torrent\n" +
-            " s NEW_SEARCH - search again(NOT IMPLEMENTED)\n" +
+            " s NEW_SEARCH - search again\n" +
+            " d INDEX      - fetch file but don't play it\n" +
             ":")
         if re.match("[0-9]+", choice):
             choice = int(choice)
