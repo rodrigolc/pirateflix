@@ -41,7 +41,7 @@ def search(args):
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) " +
         "AppleWebKit/537.75.14 (KHTML, like Gecko) " +
         "Version/7.0.3 Safari/7046A194A"
-        }
+    }
     request = Request(url, headers=headers)
     page = urlopen(request).read()
 
@@ -61,8 +61,8 @@ def search(args):
         m = m.groups()
         result = {"name": m[0], "magnet": m[1], "description": unescape(
             m[3] + m[4]), "VIP": True if 'alt="VIP"' in m[2] or
-                                        'alt="Trusted"' in m[2]
-                                        else False}
+            'alt="Trusted"' in m[2]
+            else False}
         results.append(result)
 
     return results
@@ -80,9 +80,11 @@ def print_results(results):
         i += 1
 
 
+peerflix_options = ["-d"]
+
+
 def start_peerflix(magnet, index=False, vlc=True):
-    
-    peerflix_options = ["-d"]
+    global peerflix_options
     if vlc:
         peerflix_options.append("-v")
     if index:
@@ -109,6 +111,7 @@ while(in_menu):
             " l INDEX      - list available files in torrent\n" +
             " s NEW_SEARCH - search again\n" +
             " d INDEX      - fetch file but don't play it\n" +
+            " o OPTIONS    - add options to peerflix\n" +
             ":")
         if re.match("[0-9]+", choice):
             choice = int(choice)
@@ -120,6 +123,11 @@ while(in_menu):
             g = re.findall('[s]+ (.*)', choice)
             search_results = search(g[0].split())
             print_results(search_results)
+        elif re.match("[o]+ .*", choice):
+            print choice
+            g = re.findall('[o]+ (.*)', choice)
+            peerflix_options.extend(g[0].split())
+
         elif re.match("[l]+ [0-9]*", choice):
             g = re.findall("[l]+ ([0-9]*)", choice)
             choice = int(g[0])
@@ -128,9 +136,9 @@ while(in_menu):
             g = re.findall("[m]+ ([0-9]*)", choice)
             choice = int(g[0])
             print(
-              "%s:\n%s" %
-              (search_results[choice]["name"],
-               search_results[choice]["magnet"])
+                "%s:\n%s" %
+                (search_results[choice]["name"],
+                 search_results[choice]["magnet"])
             )
             in_menu = False
         elif re.match("[d]+ [0-9]*$", choice):
@@ -141,4 +149,3 @@ while(in_menu):
     except Exception, e:
         print(e)
         print("Invalid command. Try again")
-
