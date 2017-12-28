@@ -126,6 +126,8 @@ while(in_menu):
         elif re.match("[o]+ .*", choice):
             print choice
             g = re.findall('[o]+ (.*)', choice)
+            peerflix_options = [] # quick HACK delete options when new ones are 
+                                  # introduced
             peerflix_options.extend(g[0].split())
 
         elif re.match("[l]+ [0-9]*", choice):
