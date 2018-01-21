@@ -80,7 +80,7 @@ def print_results(results):
         i += 1
 
 
-peerflix_options = ["-d"]
+peerflix_options = ["-d -v"]
 
 
 def start_peerflix(magnet, index=False, vlc=True):
@@ -115,7 +115,7 @@ while(in_menu):
             ":")
         if re.match("[0-9]+", choice):
             choice = int(choice)
-            start_peerflix(search_results[choice]['magnet'])
+            start_peerflix(search_results[choice]['magnet'],vlc=False)
         elif choice == "q":
             in_menu = False
         elif re.match("[s]+ .*", choice):
